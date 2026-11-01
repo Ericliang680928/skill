@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Minimal ComfyUI HTTP API client (stdlib only)."""
-import argparse, json, mimetypes, os, sys, time, uuid
+import argparse, json, mimetypes, os, re, sys, time, uuid
 import urllib.request, urllib.parse, urllib.error
 
 
@@ -81,6 +81,10 @@ def queue(base, wf, client_id):
     return r["prompt_id"]
 
 
+class JobError(Exception):
+    pass
+
+
 def wait(base, pid, poll=5, timeout=3600):
     t0 = time.time()
     while time.time() - t0 < timeout:
@@ -89,10 +93,10 @@ def wait(base, pid, poll=5, timeout=3600):
             st = h[pid].get("status", {})
             if st.get("status_str") == "error":
                 msgs = [m for m in st.get("messages", []) if m[0] == "execution_error"]
-                sys.exit(f"Job {pid} failed: {json.dumps(msgs, ensure_ascii=False)[:2000]}")
+                raise JobError(f"Job {pid} failed: {json.dumps(msgs, ensure_ascii=False)[:2000]}")
             return h[pid]
         time.sleep(poll)
-    sys.exit(f"Timeout waiting for {pid}")
+    raise JobError(f"Timeout waiting for {pid}")
 
 
 def download_outputs(base, hist, outdir, index):
@@ -101,10 +105,12 @@ def download_outputs(base, hist, outdir, index):
     for node_out in hist.get("outputs", {}).values():
         for key in ("videos", "gifs", "images", "audio"):
             for f in node_out.get(key, []):
+                if f.get("type") == "temp":  # previews, not final outputs
+                    continue
                 q = urllib.parse.urlencode({"filename": f["filename"],
                                             "subfolder": f.get("subfolder", ""),
                                             "type": f.get("type", "output")})
-                dst = os.path.join(outdir, f"shot{index:02d}_{f['filename']}")
+                dst = os.path.join(outdir, f"shot{index:02d}_{os.path.basename(f['filename'])}")
                 with open(dst, "wb") as fh:
                     fh.write(req(base + "/view?" + q))
                 saved.append(dst)
@@ -116,7 +122,13 @@ def cmd_submit(a):
     pid = queue(a.base, wf, uuid.uuid4().hex)
     print("prompt_id", pid)
     if a.wait:
-        print("\n".join(download_outputs(a.base, wait(a.base, pid), a.out, 0)))
+        try:
+            print("\n".join(download_outputs(a.base, wait(a.base, pid), a.out, 0)))
+        except JobError as e:
+            sys.exit(str(e))
+
+
+PLACEHOLDER = re.compile(r"\{\{(\w+)\}\}")
 
 
 def cmd_fanout(a):
@@ -124,7 +136,7 @@ def cmd_fanout(a):
     plan = json.load(open(a.plan))
     only = {int(x) for x in a.only.split(",")} if a.only else None
     cid = uuid.uuid4().hex
-    jobs = []
+    jobs = []  # (index, prompt_id, vals)
     for s in plan["shots"]:
         i = s["index"]
         if only and i not in only:
@@ -134,13 +146,53 @@ def cmd_fanout(a):
         vals = {"image": a.image, "audio": a.audio or "", "prompt": s["prompt"],
                 "duration": s["duration"], "seed": s.get("seed", 1000 + i),
                 "index": i, "prefix": f"mv_shot{i:02d}"}
-        pid = queue(a.base, subst(tpl, vals), cid)
+        wf = subst(tpl, vals)
+        left = set(PLACEHOLDER.findall(json.dumps(wf)))
+        if left:
+            sys.exit(f"Unresolved placeholders in template: {sorted(left)}")
+        if a.dry_run:
+            print(f"--- shot {i} ---\n{json.dumps(wf, indent=2, ensure_ascii=False)}")
+            continue
+        pid = queue(a.base, wf, cid)
         print(f"shot {i}: queued {pid} ({s['duration']}s)", flush=True)
-        jobs.append((i, pid))
-    if a.wait:
-        for i, pid in jobs:
-            files = download_outputs(a.base, wait(a.base, pid), a.out, i)
-            print(f"shot {i}: done -> {files}", flush=True)
+        jobs.append((i, pid, vals))
+    if a.dry_run:
+        return
+    with open(a.jobs, "w") as fh:  # lets `collect` resume if this process dies
+        json.dump([{"index": i, "prompt_id": pid} for i, pid, _ in jobs], fh)
+    if not a.wait:
+        print(f"Queued {len(jobs)} jobs; fetch later with: collect {a.jobs}")
+        return
+    failed = []
+    for i, pid, vals in jobs:
+        for attempt in (0, 1):
+            try:
+                files = download_outputs(a.base, wait(a.base, pid), a.out, i)
+                print(f"shot {i}: done -> {files}", flush=True)
+                break
+            except JobError as e:
+                print(f"shot {i}: {e}", file=sys.stderr, flush=True)
+                if attempt or not a.retry:
+                    failed.append(i)
+                    break
+                vals["seed"] += 1000  # retry once with a fresh seed
+                pid = queue(a.base, subst(tpl, vals), cid)
+                print(f"shot {i}: retry queued {pid}", flush=True)
+    if failed:
+        sys.exit(f"Failed shots: {failed}. Re-run with --only {','.join(map(str, failed))}")
+
+
+def cmd_collect(a):
+    failed = []
+    for j in json.load(open(a.jobs)):
+        try:
+            files = download_outputs(a.base, wait(a.base, j["prompt_id"]), a.out, j["index"])
+            print(f"shot {j['index']}: done -> {files}", flush=True)
+        except JobError as e:
+            print(f"shot {j['index']}: {e}", file=sys.stderr)
+            failed.append(j["index"])
+    if failed:
+        sys.exit(f"Failed shots: {failed}")
 
 
 def main():
@@ -156,7 +208,13 @@ def main():
     f = sp.add_parser("fanout"); f.add_argument("template"); f.add_argument("plan")
     f.add_argument("--image", required=True); f.add_argument("--audio")
     f.add_argument("--only", help="comma list of shot indexes"); f.add_argument("--wait", action="store_true")
-    f.add_argument("--out", default="clips"); f.set_defaults(f=cmd_fanout)
+    f.add_argument("--out", default="clips"); f.add_argument("--jobs", default="jobs.json")
+    f.add_argument("--dry-run", action="store_true", help="print substituted workflows, queue nothing")
+    f.add_argument("--no-retry", dest="retry", action="store_false", help="don't retry failed shots")
+    f.set_defaults(f=cmd_fanout)
+    c = sp.add_parser("collect", help="wait for + download jobs listed in jobs.json")
+    c.add_argument("jobs", nargs="?", default="jobs.json"); c.add_argument("--out", default="clips")
+    c.set_defaults(f=cmd_collect)
     a = p.parse_args()
     a.base = a.url.rstrip("/")
     a.f(a)
