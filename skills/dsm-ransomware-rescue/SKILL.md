@@ -30,6 +30,6 @@ description: Preserve volatile keys during DSM or Linux ransomware incidents on 
 
 `assets/libgld-802ac85d.json` 记录二进制摘要、代码签名、静态地址及本次 QEMU RAM 的 PCI hole 映射。该配置不是通用环境检测器。不同样本、会话或 RAM 格式先重新验证；LiME、物理 padded/raw、ELF core、进程映射都不能直接当成这份 QEMU pc.ram 输入。
 
-所有脚本可查看 `--help`；`inventory.py ROOT...` 为简单位置参数入口。运行回归测试的说明位于仓库 `docs/tool-usage_CN.md`；单独安装 skill 时可用各脚本 `--help` 查看参数。现场受灾 DSM 只运行必要的标准库采集程序，解密和分析在干净主机进行。
+所有脚本可查看 `--help`；`inventory.py ROOT...` 为简单位置参数入口。运行回归测试的说明位于本 skill 的 `docs/tool-usage_CN.md`；单独安装 skill 时可用各脚本 `--help` 查看参数。现场受灾 DSM 只运行必要的标准库采集程序，解密和分析在干净主机进行。
 
 交接时必须给出：来源与目的位置、摘要、采集一致性限制、被跳过范围、验证等级、尚未解决的问题、保持暂停的服务及安全继续方式。保存命令退出码、最终文件、独立摘要和实际检查输出；不能用“程序启动了”或“返回 0”替代完整结果。
