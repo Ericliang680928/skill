@@ -39,3 +39,9 @@ python3 comfyui-music-video/scripts/plan_segments.py song.mp3 --shots 12 [--allo
 python3 comfyui-music-video/scripts/comfy_client.py --url URL fanout workflow_template.json plan.json --image singer.png --audio vocals.wav --wait --out clips/
 python3 comfyui-music-video/scripts/assemble.py clips/ --audio song.mp3 --plan plan.json -o mv.mp4
 ```
+
+## claude-account-switch
+
+不重開視窗、不丟上下文,把正在跑的 Claude Code 換成另一個登入帳號(以軟鏈 `~/.claude/.credentials.json` 原子切換),並逐個進程驗證是否真的切換。
+
+安裝:把 `claude-account-switch/` 複製到 `~/.claude/skills/`。注意:啟動時帶了 `CLAUDE_CONFIG_DIR` 的進程無法熱切,只能重開。
