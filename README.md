@@ -1,6 +1,9 @@
 # skill
 
-Claude Code skills.
+Claude Code skills. Layout follows [anthropics/skills](https://github.com/anthropics/skills): one folder per skill with a `SKILL.md`, plus `template/` as a starting point for new skills.
+
+## 新增 skill
+複製 `template/` 為新資料夾,修改 `SKILL.md` 的 `name` 與 `description`(description 決定 Claude 何時載入此 skill),再補上 `scripts/` 等資源。
 
 ## comfyui-music-video
 
