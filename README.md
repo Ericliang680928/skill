@@ -5,6 +5,9 @@ Claude Code skills. Layout follows [anthropics/skills](https://github.com/anthro
 ## 新增 skill
 複製 `template/` 為新資料夾,修改 `SKILL.md` 的 `name` 與 `description`(description 決定 Claude 何時載入此 skill),再補上 `scripts/` 等資源。
 
+## miaoli-imc
+苗栗IMC 第15屆社務助理(邀請文、接龍、議程、紀錄等格式與把關原則)。僅收錄 `SKILL.md`;名冊、預算等 `references/` 含內部資料,未納入版本庫。SKILL.md 內提到的 `references/*.md` 需在本機自行補齊。
+
 ## comfyui-music-video
 
 給 Claude Code 一首歌、一張主唱圖和 ComfyUI 網址,它會規劃 12 段分鏡與秒數、分離人聲、透過 ComfyUI API 送出 MiniMax H3 影片工作流,最後合併成配上原曲的 MV。
