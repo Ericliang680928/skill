@@ -64,7 +64,7 @@
 <div class="wrap">
   <header>
     <h1>動態網頁工具總匯</h1>
-    <p>20 個動態、動畫、繪圖與影片工具，每個都有可以操作的示範。想用的時候，按「複製程式碼」，貼進一個 .html 檔就能執行。</p>
+    <p>21 個動態、動畫、繪圖與影片工具，每個都有可以操作的示範。想用的時候，按「複製程式碼」，貼進一個 .html 檔就能執行。</p>
     <div class="how">
       <div><b>1. 看示範</b>卡片進入畫面後才會啟動，按「重播」可以重新開始。</div>
       <div><b>2. 複製程式碼</b>標示「即時示範」的，複製出來是完整可獨立執行的網頁。</div>
@@ -75,7 +75,7 @@
   <main id="grid"></main>
   <footer>
     <p><span class="badge">即時示範</span> 用該工具本身的函式庫執行，程式碼可直接複製成完整網頁。<span class="badge concept">原理示意</span> 該工具需要打包工具或專屬編輯器（如 React、影片渲染、.riv 檔），這裡用原生 JavaScript 示範同樣的原理，卡片裡複製的是真實專案的用法。</p>
-    <p>函式庫皆固定版本並從 jsDelivr 載入。GSAP 的授權條款特別，商用前請至官方網站確認。連結中的 GitHub 路徑請以各官方頁面為準。</p>
+    <p><span class="badge">風格示範</span> 只借用該作品的視覺風格，由我自己重畫，不含官方程式碼。函式庫皆固定版本並從 jsDelivr 載入。GSAP 的授權條款特別，商用前請至官方網站確認。連結中的 GitHub 路徑請以各官方頁面為準。</p>
   </footer>
 </div>
 
@@ -245,6 +245,70 @@ var DEMOS = [
     var t = new Typewriter(el, { loop: true, delay: 70, deleteSpeed: 30 });
     t.typeString("創新之夜，邀請你").pauseFor(900).deleteAll().typeString("名額有限，立即報名").pauseFor(900).deleteAll().start();
     return function () { t.stop(); };
+  } },
+
+{ id:"pixelchat", cat:"fx", name:"Pixel Chat Themes", repo:"Aqua2409z/pixel-chat-themes", libs:[], badge:"風格示範",
+  use:"Claude 的像素／ASCII 動態背景主題（作者 aqua2409z），官方版在 Claude Code 用 /pixel 或 /theme 開啟。這裡是我用文字字元自己畫的錦鯉池，只示範風格，不是官方程式碼。", hint:"點水面會產生漣漪。",
+  demo: function (stage) {
+    var W = stage.clientWidth, H = stage.clientHeight, cw = 9, ch = 15;
+    var cols = Math.floor(W / cw), rows = Math.floor(H / ch), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var cv = document.createElement("canvas");
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.cssText = "width:100%;height:100%;display:block";
+    stage.appendChild(cv);
+    var ctx = cv.getContext("2d");
+    ctx.scale(dpr, dpr); ctx.font = "13px monospace"; ctx.textBaseline = "top";
+    var koi = [0, 1, 2].map(function (i) {
+      return { x: cols * (0.2 + i * 0.3), y: rows * (0.3 + i * 0.2), a: i * 2, s: 0.28 + i * 0.05, hist: [], col: i === 1 ? "#f4f1ea" : "#ff9a5c" };
+    });
+    var ripples = [], raf, last = 0;
+    function ripple(x, y, now) { ripples.push({ x: x, y: y, t0: now }); }
+    var onDown = function (e) {
+      var r = stage.getBoundingClientRect();
+      ripple((e.clientX - r.left) / cw, (e.clientY - r.top) / ch, performance.now());
+    };
+    stage.addEventListener("pointerdown", onDown);
+    stage.style.cursor = "pointer";
+    function frame(now) {
+      raf = requestAnimationFrame(frame);
+      if (now - last < 50) return;
+      last = now;
+      var t = now / 1000;
+      ctx.clearRect(0, 0, W, H);
+      for (var r = 0; r < rows; r++) {
+        for (var c = 0; c < cols; c++) {
+          var v = Math.sin(c * 0.35 + t * 1.4) + Math.sin(r * 0.6 - t * 1.1) + Math.sin((c + r) * 0.2 + t * 0.7);
+          var ch1 = v > 1.6 ? "~" : v > 0.6 ? "-" : v > -0.4 ? "." : "";
+          if (!ch1) continue;
+          ctx.fillStyle = v > 1.6 ? "#4f8fb8" : v > 0.6 ? "#2f6489" : "#244a66";
+          ctx.fillText(ch1, c * cw, r * ch);
+        }
+      }
+      ripples = ripples.filter(function (p) { return (now - p.t0) / 150 < 8; });
+      ripples.forEach(function (p) {
+        var rad = (now - p.t0) / 150;
+        ctx.fillStyle = "rgba(160,210,240," + (1 - rad / 8) + ")";
+        for (var a = 0; a < 6.283; a += 0.12) {
+          ctx.fillText("o", (p.x + Math.cos(a) * rad * 1.3) * cw, (p.y + Math.sin(a) * rad * 0.8) * ch);
+        }
+      });
+      koi.forEach(function (k, i) {
+        k.a += Math.sin(t * 0.7 + i * 2) * 0.09;
+        k.x += Math.cos(k.a) * k.s; k.y += Math.sin(k.a) * k.s * 0.5;
+        if (k.x < 3 || k.x > cols - 3) { k.a = Math.PI - k.a; k.x = Math.max(3, Math.min(cols - 3, k.x)); }
+        if (k.y < 2 || k.y > rows - 2) { k.a = -k.a; k.y = Math.max(2, Math.min(rows - 2, k.y)); }
+        k.hist.unshift({ x: k.x, y: k.y });
+        if (k.hist.length > 16) k.hist.pop();
+        if (Math.random() < 0.004) ripple(k.x, k.y, now);
+        var parts = ["@", "O", "o", "o", ".", "~"];
+        ctx.fillStyle = k.col;
+        parts.forEach(function (chr, j) {
+          var h = k.hist[Math.min(j * 3, k.hist.length - 1)];
+          if (h) ctx.fillText(chr, h.x * cw, h.y * ch);
+        });
+      });
+    }
+    raf = requestAnimationFrame(frame);
+    return function () { cancelAnimationFrame(raf); stage.removeEventListener("pointerdown", onDown); };
   } },
 
 /* ===== 3D 與繪圖 ===== */
@@ -493,7 +557,7 @@ function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(
 DEMOS.forEach(function (d) {
   d.source = d.code || makeDoc(d.libs, d.demo);
   var card = el("article", { "data-cat": d.cat, "data-id": d.id });
-  card.appendChild(el("div", { "class": "head" }, "<h2>" + d.name + '</h2><span class="badge' + (d.concept ? " concept" : "") + '">' + (d.concept ? "原理示意" : "即時示範") + "</span>"));
+  card.appendChild(el("div", { "class": "head" }, "<h2>" + d.name + '</h2><span class="badge' + (d.concept ? " concept" : "") + '">' + (d.badge || (d.concept ? "原理示意" : "即時示範")) + "</span>"));
   card.appendChild(el("p", { "class": "use" }, d.use));
   if (d.hint) card.appendChild(el("p", { "class": "hint" }, d.hint));
   card.appendChild(el("div", { "class": "stage", id: "stage-" + d.id }));
