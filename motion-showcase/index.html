@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body>
+<title>動態網頁工具總匯</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+  /* 版面：頂部標題 + 吸頂分類列 + 兩欄示範卡片；每張卡片 = 即時舞台 + 可複製程式碼 */
+  :root {
+    color-scheme: dark;
+    --bg: #101216;
+    --panel: #181b22;
+    --stage: #0c0e12;
+    --line: #2a2f3a;
+    --fg: #f1f3f8;
+    --muted: #9aa3b5;
+    --accent: #7cc4ff;
+    --warm: #ffb86b;
+    --font-display: "Space Grotesk", "Noto Sans TC", system-ui, sans-serif;
+    --font-body: "Noto Sans TC", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--fg); font: 16px/1.7 var(--font-body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 20; }
+  .wrap { max-width: 1120px; margin: 0 auto; }
+  header { padding-block: 40px 20px; }
+  header h1 { font: 700 clamp(2rem, 6vw, 3.4rem)/1.1 var(--font-display); text-wrap: balance; }
+  header p { color: var(--muted); max-width: 62ch; margin-top: 12px; }
+  .how { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 24px; }
+  .how div { border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; font-size: .92rem; color: var(--muted); min-width: 0; }
+  .how b { color: var(--fg); display: block; }
+  nav.filters { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); padding-block: 12px; display: flex; gap: 8px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+  nav.filters button { font: 500 .9rem var(--font-body); color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 99px; padding: 6px 16px; cursor: pointer; }
+  nav.filters button[aria-pressed="true"] { color: #0c0e12; background: var(--accent); border-color: var(--accent); }
+  button:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  main { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 20px; padding-block: 24px 48px; }
+  article { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  article[hidden] { display: none; }
+  .head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .head h2 { font: 700 1.25rem var(--font-display); }
+  .badge { font: 500 .72rem var(--font-mono); padding: 2px 10px; border-radius: 99px; border: 1px solid var(--accent); color: var(--accent); }
+  .badge.concept { border-color: var(--warm); color: var(--warm); }
+  .use { color: var(--muted); font-size: .92rem; }
+  .hint { color: var(--warm); font-size: .82rem; }
+  .stage { position: relative; height: 280px; background: var(--stage); border-radius: 10px; overflow: hidden; }
+  .stage .err { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 16px; color: var(--muted); font-size: .9rem; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .bar button, .bar a { font: 500 .85rem var(--font-body); color: var(--fg); background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; text-decoration: none; }
+  .bar button.primary { background: var(--accent); color: #0c0e12; border-color: var(--accent); font-weight: 700; }
+  .bar .spacer { flex: 1; }
+  details summary { cursor: pointer; color: var(--muted); font-size: .85rem; }
+  pre { margin-top: 8px; background: var(--stage); border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow: auto; max-height: 280px; font: 400 .78rem/1.55 var(--font-mono); color: #d7dbe6; tab-size: 2; user-select: all; }
+  footer { border-top: 1px solid var(--line); padding-block: 24px 48px; color: var(--muted); font-size: .88rem; }
+  footer p + p { margin-top: 8px; }
+  @media (prefers-reduced-motion: reduce) { .stage { display: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>動態網頁工具總匯</h1>
+    <p>20 個動態、動畫、繪圖與影片工具，每個都有可以操作的示範。想用的時候，按「複製程式碼」，貼進一個 .html 檔就能執行。</p>
+    <div class="how">
+      <div><b>1. 看示範</b>卡片進入畫面後才會啟動，按「重播」可以重新開始。</div>
+      <div><b>2. 複製程式碼</b>標示「即時示範」的，複製出來是完整可獨立執行的網頁。</div>
+      <div><b>3. 換成自己的內容</b>文字、顏色、數量都寫在程式碼最前面，直接改。</div>
+    </div>
+  </header>
+  <nav class="filters" id="filters" aria-label="分類"></nav>
+  <main id="grid"></main>
+  <footer>
+    <p><span class="badge">即時示範</span> 用該工具本身的函式庫執行，程式碼可直接複製成完整網頁。<span class="badge concept">原理示意</span> 該工具需要打包工具或專屬編輯器（如 React、影片渲染、.riv 檔），這裡用原生 JavaScript 示範同樣的原理，卡片裡複製的是真實專案的用法。</p>
+    <p>函式庫皆固定版本並從 jsDelivr 載入。GSAP 的授權條款特別，商用前請至官方網站確認。連結中的 GitHub 路徑請以各官方頁面為準。</p>
+  </footer>
+</div>
+
+<script>
+/* ---------- 範例註冊表：每個 demo 函式就是可複製的程式碼本身 ---------- */
+var CDN = {
+  gsap: "https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js",
+  motion: "https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.js",
+  anime: "https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js",
+  lottie: "https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie.min.js",
+  three: "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js",
+  p5: "https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js",
+  pixi: "https://cdn.jsdelivr.net/npm/pixi.js@7.4.0/dist/pixi.min.js",
+  paper: "https://cdn.jsdelivr.net/npm/paper@0.12.17/dist/paper-full.min.js",
+  matter: "https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js",
+  mojs: "https://cdn.jsdelivr.net/npm/mo-js@0.288.2/build/mo.min.js",
+  tsp: "https://cdn.jsdelivr.net/npm/tsparticles-slim@2.12.0/tsparticles.slim.bundle.min.js",
+  vivus: "https://cdn.jsdelivr.net/npm/vivus@0.4.6/dist/vivus.min.js",
+  type: "https://cdn.jsdelivr.net/npm/typewriter-effect@2.21.0/dist/core.js",
+  lenis: "https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"
+};
+
+function makeDoc(libs, fn) {
+  return '<!doctype html>\n<html lang="zh-Hant">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n<title>示範</title>\n<style>body{margin:0;background:#101216;color:#f1f3f8;font-family:system-ui,sans-serif}</style>\n' +
+    libs.map(function (u) { return '<script src="' + u + '"><\/script>'; }).join('\n') +
+    '\n</head>\n<body>\n<div id="stage" style="position:relative;width:100%;height:360px;background:#0c0e12;overflow:hidden"></div>\n<script>\n(' +
+    fn.toString() + ')(document.getElementById("stage"));\n<\/script>\n</body>\n</html>\n';
+}
+
+
+var DEMOS = [
+/* ===== 網頁動畫 ===== */
+{ id:"gsap", cat:"web", name:"GSAP", repo:"greensock/GSAP", libs:[CDN.gsap],
+  use:"時間軸與捲動動畫的首選，控制精細、效能穩定。", hint:"",
+  demo: function (stage) {
+    var tiles = [];
+    for (var i = 0; i < 24; i++) {
+      var d = document.createElement("div");
+      d.style.cssText = "position:absolute;width:28px;height:28px;border-radius:6px;left:calc(50% - 14px);top:calc(50% - 14px);background:" + (i % 4 ? "#7cc4ff" : "#ffb86b");
+      stage.appendChild(d); tiles.push(d);
+    }
+    var w = stage.clientWidth, h = stage.clientHeight;
+    var tl = gsap.timeline({ repeat: -1, repeatDelay: 0.4 });
+    tl.to(tiles, { x: function () { return gsap.utils.random(-w / 2.4, w / 2.4); }, y: function () { return gsap.utils.random(-h / 2.6, h / 2.6); }, rotation: function () { return gsap.utils.random(-180, 180); }, duration: 1.1, ease: "power3.out", stagger: { each: 0.03, from: "center" } })
+      .to(tiles, { x: function (i) { return (i % 6 - 2.5) * 40; }, y: function (i) { return (Math.floor(i / 6) - 1.5) * 40; }, rotation: 0, duration: 1, ease: "back.out(1.6)", stagger: { each: 0.03, from: "center" } }, "+=0.5");
+    return function () { tl.kill(); };
+  } },
+{ id:"motion", cat:"web", name:"Motion", repo:"motiondivision/motion", libs:[CDN.motion],
+  use:"彈簧與手勢動畫，語法最簡單，也有 React 版。", hint:"點一下舞台，圓球會用彈簧移過去。",
+  demo: function (stage) {
+    var animate = Motion.animate;
+    var b = document.createElement("div");
+    b.style.cssText = "position:absolute;left:0;top:0;width:56px;height:56px;border-radius:50%;background:#7cc4ff";
+    stage.appendChild(b);
+    animate(b, { x: stage.clientWidth / 2 - 28, y: stage.clientHeight / 2 - 28 }, { duration: 0 });
+    var onDown = function (e) {
+      var r = stage.getBoundingClientRect();
+      animate(b, { x: e.clientX - r.left - 28, y: e.clientY - r.top - 28 }, { type: "spring", stiffness: 200, damping: 12 });
+    };
+    stage.addEventListener("pointerdown", onDown);
+    stage.style.cursor = "pointer";
+    return function () { stage.removeEventListener("pointerdown", onDown); };
+  } },
+{ id:"anime", cat:"web", name:"anime.js", repo:"juliangarnier/anime", libs:[CDN.anime],
+  use:"輕量，適合簡單的 CSS、SVG、DOM 動畫。", hint:"",
+  demo: function (stage) {
+    var cols = 10, rows = 5, dots = [];
+    stage.style.display = "grid";
+    stage.style.gridTemplateColumns = "repeat(" + cols + ",1fr)";
+    stage.style.placeItems = "center";
+    stage.style.padding = "24px";
+    for (var i = 0; i < cols * rows; i++) {
+      var d = document.createElement("div");
+      d.style.cssText = "width:14px;height:14px;border-radius:50%;background:#7cc4ff";
+      stage.appendChild(d); dots.push(d);
+    }
+    var a = anime({ targets: dots, scale: [1, 2.2, 1], opacity: [0.4, 1, 0.4], delay: anime.stagger(60, { grid: [cols, rows], from: "center" }), loop: true, easing: "easeInOutSine", duration: 900 });
+    return function () { a.pause(); };
+  } },
+{ id:"springs", cat:"web", name:"react-spring", repo:"pmndrs/react-spring", concept:true,
+  use:"React 專用，偏物理感的 UI 動畫。這裡用原生程式示範彈簧原理。", hint:"點一下舞台移動圓球，拖曳下方的滑桿調整彈性與阻尼。",
+  code: "// npm i @react-spring/web\nimport { useSpring, animated } from '@react-spring/web'\n\nexport function Ball() {\n  const [styles, api] = useSpring(() => ({\n    x: 0,\n    config: { tension: 170, friction: 14 },\n  }))\n  return (\n    <animated.div\n      onClick={() => api.start({ x: Math.random() * 300 })}\n      style={{ ...styles, width: 56, height: 56, borderRadius: '50%', background: '#7cc4ff' }}\n    />\n  )\n}\n",
+  demo: function (stage) {
+    var ball = document.createElement("div");
+    ball.style.cssText = "position:absolute;left:0;top:0;width:56px;height:56px;border-radius:50%;background:#7cc4ff";
+    var ctl = document.createElement("div");
+    ctl.style.cssText = "position:absolute;left:12px;right:12px;bottom:8px;display:flex;gap:16px;font:12px sans-serif;color:#9aa3b5";
+    ctl.innerHTML = '<label style="flex:1">彈性 <input data-k="k" type="range" min="40" max="400" value="170" style="width:100%"></label><label style="flex:1">阻尼 <input data-k="c" type="range" min="2" max="40" value="14" style="width:100%"></label>';
+    stage.append(ball, ctl);
+    var k = 170, c = 14, x = stage.clientWidth / 2 - 28, y = 80, tx = x, ty = y, vx = 0, vy = 0, last = performance.now(), raf;
+    ctl.addEventListener("input", function (e) { k = +ctl.querySelector('[data-k="k"]').value; c = +ctl.querySelector('[data-k="c"]').value; });
+    var onDown = function (e) { if (e.target.closest("div") === ctl || e.target.tagName === "INPUT") return; var r = stage.getBoundingClientRect(); tx = e.clientX - r.left - 28; ty = e.clientY - r.top - 28; };
+    stage.addEventListener("pointerdown", onDown);
+    (function loop(now) {
+      var dt = Math.min(0.032, (now - last) / 1000); last = now;
+      vx += (-k * (x - tx) - c * vx) * dt; vy += (-k * (y - ty) - c * vy) * dt;
+      x += vx * dt; y += vy * dt;
+      ball.style.transform = "translate(" + x + "px," + y + "px)";
+      raf = requestAnimationFrame(loop);
+    })(last);
+    return function () { cancelAnimationFrame(raf); stage.removeEventListener("pointerdown", onDown); };
+  } },
+{ id:"lenis", cat:"web", name:"Lenis", repo:"darkroomengineering/lenis", libs:[CDN.lenis],
+  use:"只做平滑捲動，通常和 GSAP 搭配。", hint:"在方框裡用滾輪或手指滑動，上方藍線是捲動進度。",
+  demo: function (stage) {
+    var wrap = document.createElement("div");
+    wrap.style.cssText = "position:absolute;inset:0;overflow:auto;padding:16px";
+    var inner = document.createElement("div");
+    for (var i = 1; i <= 12; i++) {
+      var p = document.createElement("div");
+      p.textContent = "第 " + i + " 段";
+      p.style.cssText = "height:90px;margin-bottom:12px;border-radius:10px;display:grid;place-items:center;color:#f1f3f8;font:14px sans-serif;background:" + (i % 2 ? "#1c2230" : "#242c3d");
+      inner.appendChild(p);
+    }
+    wrap.appendChild(inner); stage.appendChild(wrap);
+    var bar = document.createElement("div");
+    bar.style.cssText = "position:absolute;left:0;top:0;height:3px;width:0;background:#7cc4ff;z-index:2";
+    stage.appendChild(bar);
+    var lenis = new Lenis({ wrapper: wrap, content: inner, lerp: 0.08 });
+    lenis.on("scroll", function (e) { bar.style.width = (e.progress * 100) + "%"; });
+    var raf;
+    (function loop(t) { lenis.raf(t); raf = requestAnimationFrame(loop); })(0);
+    return function () { cancelAnimationFrame(raf); lenis.destroy(); };
+  } },
+
+/* ===== 特殊視覺效果 ===== */
+{ id:"tsparticles", cat:"fx", name:"tsParticles", repo:"tsparticles/tsparticles", libs:[CDN.tsp],
+  use:"背景粒子，如星空、雪花、連線網路。", hint:"滑鼠移過去，粒子會散開。",
+  demo: function (stage) {
+    stage.id = stage.id || "stage";
+    tsParticles.load(stage.id, {
+      fpsLimit: 60, fullScreen: { enable: false }, background: { color: "#0c0e12" },
+      particles: { number: { value: 50 }, color: { value: ["#7cc4ff", "#ffb86b"] }, opacity: { value: 0.6 }, size: { value: { min: 1, max: 3 } }, move: { enable: true, speed: 1 }, links: { enable: true, color: "#7cc4ff", opacity: 0.25, distance: 120 } },
+      interactivity: { events: { onHover: { enable: true, mode: "repulse" } }, modes: { repulse: { distance: 90 } } }
+    });
+    return function () { var c = tsParticles.domItem(0); if (c) c.destroy(); };
+  } },
+{ id:"vivus", cat:"fx", name:"Vivus", repo:"maxwellito/vivus", libs:[CDN.vivus],
+  use:"SVG 線條逐筆描繪，適合 Logo 與插圖。", hint:"",
+  demo: function (stage) {
+    stage.innerHTML = '<svg viewBox="0 0 200 120" style="width:100%;height:100%" fill="none" stroke="#7cc4ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M30 95 L30 40 L70 75 L100 25 L130 75 L170 40 L170 95 Z"/><circle cx="100" cy="25" r="8" stroke="#ffb86b"/><path d="M45 105 H155" stroke="#ffb86b"/></svg>';
+    var timer;
+    var v = new Vivus(stage.querySelector("svg"), { type: "oneByOne", duration: 120, animTimingFunction: Vivus.EASE_OUT }, function () {
+      timer = setTimeout(function () { v.reset().play(); }, 1400);
+    });
+    return function () { clearTimeout(timer); v.stop(); };
+  } },
+{ id:"mojs", cat:"fx", name:"mo.js", repo:"mojs/mojs", libs:[CDN.mojs],
+  use:"點擊爆發、圖形特效，適合按鈕回饋。", hint:"點舞台任何位置。",
+  demo: function (stage) {
+    var burst = new mojs.Burst({ parent: stage, radius: { 10: 70 }, count: 12, angle: { 0: 90 }, children: { shape: "line", stroke: ["#7cc4ff", "#ffb86b"], strokeWidth: 2, scaleX: { 1: 0 }, duration: 700, easing: "cubic.out" } });
+    var ring = new mojs.Shape({ parent: stage, shape: "circle", fill: "none", stroke: "#7cc4ff", strokeWidth: { 6: 0 }, radius: { 10: 50 }, duration: 600 });
+    var go = function (x, y) { var o = { left: x + "px", top: y + "px" }; burst.tune(o).replay(); ring.tune(o).replay(); };
+    var onDown = function (e) { var r = stage.getBoundingClientRect(); go(e.clientX - r.left, e.clientY - r.top); };
+    stage.addEventListener("pointerdown", onDown);
+    stage.style.cursor = "pointer";
+    var t = setTimeout(function () { go(stage.clientWidth / 2, stage.clientHeight / 2); }, 300);
+    return function () { clearTimeout(t); stage.removeEventListener("pointerdown", onDown); };
+  } },
+{ id:"typewriter", cat:"fx", name:"Typewriter", repo:"tameemsafi/typewriterjs", libs:[CDN.type],
+  use:"打字機文字效果，適合首頁標語。（套件名稱 typewriter-effect）", hint:"",
+  demo: function (stage) {
+    stage.style.display = "grid"; stage.style.placeItems = "center"; stage.style.padding = "16px"; stage.style.textAlign = "center";
+    var el = document.createElement("div");
+    el.style.cssText = "font:600 26px sans-serif;color:#f1f3f8";
+    stage.appendChild(el);
+    var t = new Typewriter(el, { loop: true, delay: 70, deleteSpeed: 30 });
+    t.typeString("創新之夜，邀請你").pauseFor(900).deleteAll().typeString("名額有限，立即報名").pauseFor(900).deleteAll().start();
+    return function () { t.stop(); };
+  } },
+
+/* ===== 3D 與繪圖 ===== */
+{ id:"three", cat:"3d", name:"three.js", repo:"mrdoob/three.js", libs:[CDN.three],
+  use:"瀏覽器 3D 的標準選擇。", hint:"",
+  demo: function (stage) {
+    var w = stage.clientWidth, h = stage.clientHeight;
+    var r = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    r.setSize(w, h); r.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    stage.appendChild(r.domElement);
+    var s = new THREE.Scene(), c = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
+    c.position.z = 5;
+    var m = new THREE.Mesh(new THREE.TorusKnotGeometry(1, 0.32, 140, 20), new THREE.MeshNormalMaterial());
+    s.add(m);
+    var raf;
+    (function loop() { m.rotation.x += 0.006; m.rotation.y += 0.01; r.render(s, c); raf = requestAnimationFrame(loop); })();
+    return function () { cancelAnimationFrame(raf); r.dispose(); r.domElement.remove(); };
+  } },
+{ id:"p5", cat:"3d", name:"p5.js", repo:"processing/p5.js", libs:[CDN.p5],
+  use:"創意編程與生成藝術，也適合教學。", hint:"移動滑鼠，圖形會跟著偏移。",
+  demo: function (stage) {
+    var inst = new p5(function (p) {
+      var w = stage.clientWidth, h = stage.clientHeight;
+      p.setup = function () { p.createCanvas(w, h); p.noStroke(); };
+      p.draw = function () {
+        p.background(12, 14, 18, 40);
+        var t = p.frameCount * 0.01;
+        for (var i = 0; i < 60; i++) {
+          var a = i / 60 * p.TWO_PI + t, r = 60 + 50 * p.noise(i * 0.1, t);
+          p.fill(124 + i, 196 - i, 255, 200);
+          p.circle(w / 2 + Math.cos(a) * r * 1.6 + (p.mouseX - w / 2) * 0.1, h / 2 + Math.sin(a) * r + (p.mouseY - h / 2) * 0.1, 8);
+        }
+      };
+    }, stage);
+    return function () { inst.remove(); };
+  } },
+{ id:"pixi", cat:"3d", name:"PixiJS", repo:"pixijs/pixijs", libs:[CDN.pixi],
+  use:"快速 2D 渲染，適合遊戲與大量元素的互動畫面。", hint:"",
+  demo: function (stage) {
+    var app = new PIXI.Application({ width: stage.clientWidth, height: stage.clientHeight, backgroundAlpha: 0, antialias: true });
+    stage.appendChild(app.view);
+    var dots = [];
+    for (var i = 0; i < 40; i++) {
+      var g = new PIXI.Graphics();
+      g.beginFill(i % 3 ? 0x7cc4ff : 0xffb86b);
+      g.drawCircle(0, 0, 6 + Math.random() * 10);
+      g.endFill();
+      g.x = Math.random() * app.screen.width; g.y = Math.random() * app.screen.height;
+      g.vx = (Math.random() - 0.5) * 3; g.vy = (Math.random() - 0.5) * 3;
+      app.stage.addChild(g); dots.push(g);
+    }
+    app.ticker.add(function () {
+      dots.forEach(function (g) {
+        g.x += g.vx; g.y += g.vy;
+        if (g.x < 0 || g.x > app.screen.width) g.vx *= -1;
+        if (g.y < 0 || g.y > app.screen.height) g.vy *= -1;
+      });
+    });
+    return function () { app.destroy(true); };
+  } },
+{ id:"paper", cat:"3d", name:"Paper.js", repo:"paperjs/paper.js", libs:[CDN.paper],
+  use:"向量圖形編程，曲線與路徑操作很順手。", hint:"滑鼠在舞台左右移動，波浪會集中在滑鼠附近。",
+  demo: function (stage) {
+    var cv = document.createElement("canvas");
+    cv.style.cssText = "width:100%;height:100%;display:block";
+    stage.appendChild(cv);
+    paper.setup(cv);
+    var w = paper.view.size.width, h = paper.view.size.height, n = 24;
+    var path = new paper.Path({ strokeColor: "#7cc4ff", strokeWidth: 4, strokeCap: "round" });
+    for (var i = 0; i <= n; i++) path.add(new paper.Point(i / n * w, h / 2));
+    path.smooth();
+    var mx = w / 2;
+    cv.addEventListener("pointermove", function (e) { mx = e.offsetX; });
+    paper.view.onFrame = function (ev) {
+      path.segments.forEach(function (s, i) {
+        var x = i / n * w;
+        s.point.y = h / 2 + Math.sin(ev.time * 2 + i * 0.5) * 52 * Math.exp(-Math.abs(x - mx) / (w * 0.4));
+      });
+      path.smooth();
+    };
+    return function () { paper.view.onFrame = null; paper.project.remove(); };
+  } },
+{ id:"matter", cat:"3d", name:"matter.js", repo:"liabru/matter-js", libs:[CDN.matter],
+  use:"2D 物理引擎：掉落、碰撞、堆疊。", hint:"點舞台任何位置掉下新的物體。",
+  demo: function (stage) {
+    var M = Matter, w = stage.clientWidth, h = stage.clientHeight;
+    var engine = M.Engine.create();
+    var render = M.Render.create({ element: stage, engine: engine, options: { width: w, height: h, wireframes: false, background: "transparent" } });
+    var wall = { isStatic: true, render: { fillStyle: "#242c3d" } };
+    M.Composite.add(engine.world, [M.Bodies.rectangle(w / 2, h + 25, w, 50, wall), M.Bodies.rectangle(-25, h / 2, 50, h, wall), M.Bodies.rectangle(w + 25, h / 2, 50, h, wall)]);
+    function add(x, y) {
+      var o = { restitution: 0.5, render: { fillStyle: Math.random() > 0.5 ? "#7cc4ff" : "#ffb86b" } };
+      M.Composite.add(engine.world, Math.random() > 0.5 ? M.Bodies.circle(x, y, 12 + Math.random() * 14, o) : M.Bodies.rectangle(x, y, 28 + Math.random() * 20, 28 + Math.random() * 20, o));
+    }
+    for (var i = 0; i < 10; i++) add(Math.random() * w, -Math.random() * 200);
+    var onDown = function (e) { var r = stage.getBoundingClientRect(); add(e.clientX - r.left, e.clientY - r.top); };
+    stage.addEventListener("pointerdown", onDown);
+    var runner = M.Runner.create();
+    M.Runner.run(runner, engine); M.Render.run(render);
+    return function () { stage.removeEventListener("pointerdown", onDown); M.Render.stop(render); M.Runner.stop(runner); render.canvas.remove(); M.Composite.clear(engine.world); };
+  } },
+
+/* ===== 影片與設計師工具 ===== */
+{ id:"remotion", cat:"video", name:"Remotion", repo:"remotion-dev/remotion", concept:true,
+  use:"用 React 寫影片，輸出 MP4，適合批量製作社群影片。這裡用原生程式示範「依影格算畫面」的原理。", hint:"拖曳下方滑桿逐格檢視。",
+  code: "// 建立專案：npx create-video@latest\n// src/Title.tsx\nimport { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion'\n\nexport const Title = () => {\n  const frame = useCurrentFrame()\n  const opacity = interpolate(frame, [0, 20], [0, 1], { extrapolateRight: 'clamp' })\n  const y = interpolate(frame, [0, 20], [30, 0], { extrapolateRight: 'clamp' })\n  return (\n    <AbsoluteFill style={{ justifyContent: 'center', alignItems: 'center', fontSize: 96, opacity, transform: `translateY(${y}px)` }}>\n      創新之夜\n    </AbsoluteFill>\n  )\n}\n\n// 預覽：npx remotion studio\n// 輸出：npx remotion render src/index.ts Title out/title.mp4\n",
+  demo: function (stage) {
+    var fps = 30, total = 90;
+    function interpolate(f, a, b) { return b[0] + (b[1] - b[0]) * Math.min(1, Math.max(0, (f - a[0]) / (a[1] - a[0]))); }
+    stage.innerHTML = '<div style="position:absolute;inset:0 0 44px;display:grid;place-content:center;text-align:center"><div class="a" style="font:700 40px sans-serif;color:#f1f3f8">創新之夜</div><div class="b" style="font:16px sans-serif;color:#9aa3b5;margin-top:8px">2026.12.20</div></div><input type="range" min="0" max="' + (total - 1) + '" value="0" style="position:absolute;left:16px;width:calc(100% - 32px);bottom:12px"><span class="l" style="position:absolute;right:16px;top:8px;font:12px monospace;color:#9aa3b5"></span>';
+    var A = stage.querySelector(".a"), B = stage.querySelector(".b"), L = stage.querySelector(".l"), R = stage.querySelector("input");
+    var f = 0, hold = 0;
+    function render() {
+      A.style.opacity = interpolate(f, [0, 20], [0, 1]);
+      A.style.transform = "translateY(" + interpolate(f, [0, 20], [30, 0]) + "px)";
+      B.style.opacity = interpolate(f, [25, 45], [0, 1]);
+      L.textContent = "frame " + f + " / " + total + "  ·  " + (f / fps).toFixed(2) + "s";
+      R.value = f;
+    }
+    R.addEventListener("input", function () { f = +R.value; hold = Date.now(); render(); });
+    render();
+    var timer = setInterval(function () { if (Date.now() - hold < 1500) return; f = (f + 1) % total; render(); }, 1000 / fps);
+    return function () { clearInterval(timer); };
+  } },
+{ id:"motioncanvas", cat:"video", name:"Motion Canvas", repo:"motion-canvas/motion-canvas", concept:true,
+  use:"用程式寫教學與解說動畫，場景是一段依序執行的程式。這裡用 generator 示範同樣的寫法。", hint:"",
+  code: "// 建立專案：npm init @motion-canvas@latest\n// src/scenes/example.tsx\nimport { makeScene2D, Circle } from '@motion-canvas/2d'\nimport { createRef, all } from '@motion-canvas/core'\n\nexport default makeScene2D(function* (view) {\n  const c = createRef<Circle>()\n  view.add(<Circle ref={c} size={120} fill=\"#7cc4ff\" />)\n\n  yield* c().position.x(300, 1)\n  yield* all(c().scale(1.5, 0.5), c().fill('#ffb86b', 0.5))\n  yield* c().position.x(-300, 1)\n})\n",
+  demo: function (stage) {
+    var cv = document.createElement("canvas");
+    var w = stage.clientWidth, h = stage.clientHeight;
+    cv.width = w; cv.height = h; cv.style.cssText = "width:100%;height:100%;display:block";
+    stage.appendChild(cv);
+    var ctx = cv.getContext("2d");
+    var S = { x: 60, r: 20, c: "#7cc4ff" };
+    function ease(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+    function* tween(sec, fn) { var n = sec * 60; for (var i = 1; i <= n; i++) { fn(ease(i / n)); yield; } }
+    function* scene() {
+      while (true) {
+        yield* tween(1, function (t) { S.x = 60 + (w - 120) * t; });
+        yield* tween(0.5, function (t) { S.r = 20 + 30 * t; S.c = t > 0.5 ? "#ffb86b" : "#7cc4ff"; });
+        yield* tween(1, function (t) { S.x = w - 60 - (w - 120) * t; });
+        yield* tween(0.5, function (t) { S.r = 50 - 30 * t; S.c = t > 0.5 ? "#7cc4ff" : "#ffb86b"; });
+      }
+    }
+    var g = scene(), raf;
+    (function frame() {
+      g.next();
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = S.c; ctx.beginPath(); ctx.arc(S.x, h / 2, S.r, 0, 6.283); ctx.fill();
+      raf = requestAnimationFrame(frame);
+    })();
+    return function () { cancelAnimationFrame(raf); };
+  } },
+{ id:"hyperframes", cat:"video", name:"HyperFrames", repo:"heygen-com/hyperframes", libs:[CDN.gsap], concept:true,
+  use:"把 HTML 畫面轉成影片。原理是把網頁動畫停在第 N 格逐格截圖，這裡用 GSAP 時間軸逐格定位示範。實際用法請看官方說明。", hint:"拖曳滑桿，網頁畫面會精準停在指定影格。",
+  demo: function (stage) {
+    stage.innerHTML = '<div style="position:absolute;inset:0 0 44px;display:grid;place-content:center;gap:10px;text-align:center"><div class="t" style="font:700 36px sans-serif;color:#f1f3f8">活動報名開跑</div><div class="bars" style="display:grid;gap:6px;width:220px"><i style="height:8px;border-radius:4px;background:#7cc4ff"></i><i style="height:8px;border-radius:4px;background:#ffb86b;width:70%"></i><i style="height:8px;border-radius:4px;background:#7cc4ff;width:45%"></i></div></div><input type="range" min="0" max="89" value="0" style="position:absolute;left:16px;width:calc(100% - 32px);bottom:12px"><span class="l" style="position:absolute;right:16px;top:8px;font:12px monospace;color:#9aa3b5"></span>';
+    var fps = 30, total = 90;
+    var tl = gsap.timeline({ paused: true });
+    tl.from(stage.querySelector(".t"), { y: 40, opacity: 0, duration: 0.6, ease: "power3.out" })
+      .from(stage.querySelectorAll(".bars i"), { scaleX: 0, transformOrigin: "left", duration: 0.5, stagger: 0.2, ease: "power2.out" }, 0.3);
+    var R = stage.querySelector("input"), L = stage.querySelector(".l"), f = 0, hold = 0;
+    function render() { tl.seek(f / fps); L.textContent = "frame " + f + " / " + total; R.value = f; }
+    R.addEventListener("input", function () { f = +R.value; hold = Date.now(); render(); });
+    render();
+    var timer = setInterval(function () { if (Date.now() - hold < 1500) return; f = (f + 1) % total; render(); }, 1000 / fps);
+    return function () { clearInterval(timer); tl.kill(); };
+  } },
+{ id:"lottie", cat:"video", name:"Lottie-web", repo:"airbnb/lottie-web", libs:[CDN.lottie],
+  use:"播放設計師用 After Effects 做好的動畫（JSON 格式）。", hint:"",
+  demo: function (stage) {
+    var data = { v: "5.7.0", fr: 30, ip: 0, op: 60, w: 200, h: 200, nm: "pulse", ddd: 0, assets: [], layers: [{ ddd: 0, ind: 1, ty: 4, nm: "dot", sr: 1, ks: { o: { a: 0, k: 100 }, r: { a: 0, k: 0 }, p: { a: 0, k: [100, 100, 0] }, a: { a: 0, k: [0, 0, 0] }, s: { a: 1, k: [{ t: 0, s: [40, 40, 100], i: { x: [0.4], y: [1] }, o: { x: [0.6], y: [0] } }, { t: 30, s: [100, 100, 100], i: { x: [0.4], y: [1] }, o: { x: [0.6], y: [0] } }, { t: 60, s: [40, 40, 100] }] } }, ao: 0, shapes: [{ ty: "gr", it: [{ ty: "el", p: { a: 0, k: [0, 0] }, s: { a: 0, k: [120, 120] }, nm: "el" }, { ty: "fl", c: { a: 0, k: [0.486, 0.769, 1, 1] }, o: { a: 0, k: 100 } }, { ty: "tr", p: { a: 0, k: [0, 0] }, a: { a: 0, k: [0, 0] }, s: { a: 0, k: [100, 100] }, r: { a: 0, k: 0 }, o: { a: 0, k: 100 } }] }], ip: 0, op: 60, st: 0, bm: 0 }] };
+    var a = lottie.loadAnimation({ container: stage, renderer: "svg", loop: true, autoplay: true, animationData: data });
+    return function () { a.destroy(); };
+  } },
+{ id:"rive", cat:"video", name:"Rive", repo:"rive-app/rive-wasm", concept:true,
+  use:"互動狀態機動畫：角色會依滑鼠與輸入切換狀態。需要 .riv 檔，這裡用原生程式示範狀態機原理。", hint:"滑鼠移到圓球上、按下，看狀態名稱與外觀改變。",
+  code: "<canvas id=\"c\" width=\"400\" height=\"300\"></canvas>\n<script src=\"https://unpkg.com/@rive-app/canvas@2\"><\/script>\n<script>\n  // 建議把版本號固定成實際使用的版本\n  const r = new rive.Rive({\n    src: 'character.riv',            // 在 Rive 編輯器匯出的檔案\n    canvas: document.getElementById('c'),\n    autoplay: true,\n    stateMachines: 'State Machine 1',\n    onLoad: () => r.resizeDrawingSurfaceToCanvas(),\n  })\n<\/script>\n",
+  demo: function (stage) {
+    var b = document.createElement("div");
+    b.style.cssText = "position:absolute;left:50%;top:50%;width:110px;height:110px;margin:-55px;border-radius:50%;cursor:pointer;display:grid;place-items:center;font:600 14px sans-serif;color:#0c0e12;transition:background .2s;user-select:none";
+    stage.appendChild(b);
+    var states = { idle: { s: 1, c: "#7cc4ff" }, hover: { s: 1.15, c: "#ffb86b" }, pressed: { s: 0.88, c: "#ff7a7a" } };
+    var cur = "idle", s = 1, raf;
+    function set(n) { cur = n; b.textContent = n; b.style.background = states[n].c; }
+    set("idle");
+    b.onpointerenter = function () { set("hover"); };
+    b.onpointerleave = function () { set("idle"); };
+    b.onpointerdown = function () { set("pressed"); };
+    b.onpointerup = function () { set("hover"); };
+    (function loop(t) {
+      var st = states[cur];
+      s += (st.s + (cur === "idle" ? Math.sin(t / 400) * 0.04 : 0) - s) * 0.18;
+      b.style.transform = "scale(" + s + ")";
+      raf = requestAnimationFrame(loop);
+    })(0);
+    return function () { cancelAnimationFrame(raf); };
+  } },
+{ id:"theatre", cat:"video", name:"Theatre.js", repo:"theatre-js/theatre", concept:true,
+  use:"在瀏覽器裡用視覺化時間軸調整關鍵影格。需要打包工具，這裡用原生程式示範關鍵影格的原理。", hint:"",
+  code: "// npm i @theatre/core @theatre/studio\nimport { getProject, types } from '@theatre/core'\nimport studio from '@theatre/studio'\n\nstudio.initialize()   // 開發時顯示時間軸編輯器，上線前移除\n\nconst sheet = getProject('Demo').sheet('Scene')\nconst obj = sheet.object('Box', {\n  x: types.number(0, { range: [-200, 200] }),\n})\n\nobj.onValuesChange((v) => {\n  box.style.transform = `translateX(${v.x}px)`\n})\n\nsheet.project.ready.then(() => sheet.sequence.play({ iterationCount: Infinity }))\n",
+  demo: function (stage) {
+    var box = document.createElement("div");
+    box.style.cssText = "position:absolute;top:60px;left:0;width:48px;height:48px;border-radius:10px;background:#7cc4ff";
+    var track = document.createElement("div");
+    track.style.cssText = "position:absolute;left:16px;right:16px;bottom:48px;height:2px;background:#39414f";
+    stage.append(box, track);
+    var kf = [{ t: 0, x: 0, s: 1 }, { t: 1, x: 1, s: 1.5 }, { t: 2, x: 0.4, s: 1 }, { t: 3, x: 0, s: 1 }];
+    kf.forEach(function (k) {
+      var d = document.createElement("div");
+      d.style.cssText = "position:absolute;top:-5px;width:10px;height:10px;margin-left:-5px;background:#ffb86b;transform:rotate(45deg);left:" + (k.t / 3 * 100) + "%";
+      track.appendChild(d);
+    });
+    var head = document.createElement("div");
+    head.style.cssText = "position:absolute;top:-14px;width:2px;height:30px;background:#fff";
+    track.appendChild(head);
+    var ease = function (t) { return t * t * (3 - 2 * t); }, dur = 3000, t0 = performance.now(), raf;
+    (function loop(now) {
+      var p = ((now - t0) % dur) / dur * 3, i = 0;
+      while (i < kf.length - 2 && p > kf[i + 1].t) i++;
+      var a = kf[i], b = kf[i + 1], u = ease((p - a.t) / (b.t - a.t));
+      var x = a.x + (b.x - a.x) * u, sc = a.s + (b.s - a.s) * u;
+      box.style.transform = "translateX(" + (x * (stage.clientWidth - 80) + 16) + "px) scale(" + sc + ")";
+      head.style.left = (p / 3 * 100) + "%";
+      raf = requestAnimationFrame(loop);
+    })(t0);
+    return function () { cancelAnimationFrame(raf); };
+  } }
+];
+
+var CATS = [["all", "全部"], ["web", "網頁動畫"], ["fx", "特殊視覺效果"], ["3d", "3D 與繪圖"], ["video", "影片與設計師工具"]];
+
+/* ---------- 版面產生 ---------- */
+var grid = document.getElementById("grid");
+var filters = document.getElementById("filters");
+var cleanups = {};
+
+function el(tag, attrs, html) {
+  var e = document.createElement(tag);
+  if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+  if (html != null) e.innerHTML = html;
+  return e;
+}
+function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+DEMOS.forEach(function (d) {
+  d.source = d.code || makeDoc(d.libs, d.demo);
+  var card = el("article", { "data-cat": d.cat, "data-id": d.id });
+  card.appendChild(el("div", { "class": "head" }, "<h2>" + d.name + '</h2><span class="badge' + (d.concept ? " concept" : "") + '">' + (d.concept ? "原理示意" : "即時示範") + "</span>"));
+  card.appendChild(el("p", { "class": "use" }, d.use));
+  if (d.hint) card.appendChild(el("p", { "class": "hint" }, d.hint));
+  card.appendChild(el("div", { "class": "stage", id: "stage-" + d.id }));
+  var bar = el("div", { "class": "bar" });
+  var replay = el("button", { type: "button" }, "重播");
+  var copy = el("button", { type: "button", "class": "primary" }, d.concept ? "複製真實用法" : "複製程式碼");
+  var link = el("a", { href: "https://github.com/" + d.repo, target: "_blank", rel: "noopener" }, "GitHub");
+  bar.append(replay, copy, el("span", { "class": "spacer" }), link);
+  card.appendChild(bar);
+  var det = el("details");
+  det.appendChild(el("summary", null, d.concept ? "看真實用法" : "看完整網頁程式碼"));
+  var pre = el("pre", null, esc(d.source));
+  det.appendChild(pre);
+  card.appendChild(det);
+  grid.appendChild(card);
+
+  replay.addEventListener("click", function () { start(d); });
+  copy.addEventListener("click", function () {
+    var done = function (ok) { copy.textContent = ok ? "已複製" : "已選取，請手動複製"; setTimeout(function () { copy.textContent = d.concept ? "複製真實用法" : "複製程式碼"; }, 1800); };
+    var fallback = function () { det.open = true; var r = document.createRange(); r.selectNodeContents(pre); var s = getSelection(); s.removeAllRanges(); s.addRange(r); done(false); };
+    try { navigator.clipboard.writeText(d.source).then(function () { done(true); }, fallback); } catch (e) { fallback(); }
+  });
+});
+
+CATS.forEach(function (c, i) {
+  var b = el("button", { type: "button", "aria-pressed": i === 0 ? "true" : "false" }, c[1]);
+  b.addEventListener("click", function () {
+    filters.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+    b.setAttribute("aria-pressed", "true");
+    grid.querySelectorAll("article").forEach(function (a) { a.hidden = !(c[0] === "all" || a.dataset.cat === c[0]); });
+  });
+  filters.appendChild(b);
+});
+
+function start(d) {
+  var stage = document.getElementById("stage-" + d.id);
+  try { if (cleanups[d.id]) cleanups[d.id](); } catch (e) {}
+  stage.innerHTML = ""; stage.removeAttribute("style");
+  try {
+    cleanups[d.id] = d.demo(stage);
+  } catch (e) {
+    stage.appendChild(el("div", { "class": "err" }, "這個示範需要連網載入 " + d.name + "，載入失敗時請重新整理。"));
+  }
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/motion@11.11.13/dist/motion.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pixi.js@7.4.0/dist/pixi.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/paper@0.12.17/dist/paper-full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mo-js@0.288.2/build/mo.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tsparticles-slim@2.12.0/tsparticles.slim.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vivus@0.4.6/dist/vivus.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/typewriter-effect@2.21.0/dist/core.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script>
+/* 卡片進入畫面才啟動示範，省效能 */
+if ("IntersectionObserver" in window) {
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      io.unobserve(en.target);
+      var d = DEMOS.filter(function (x) { return x.id === en.target.dataset.id; })[0];
+      if (d) start(d);
+    });
+  }, { rootMargin: "120px" });
+  grid.querySelectorAll("article").forEach(function (a) { io.observe(a); });
+} else {
+  DEMOS.forEach(start);
+}
+</script>
+
+</body>
+</html>
