@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>創新之夜 2026 活動網頁範例</title>
+<style>
+  :root { --bg:#0b0d17; --fg:#f4f1ea; --muted:#9aa0b4; --accent:#ff6b4a; --card:#151829; }
+  * { box-sizing:border-box; margin:0; }
+  html { scroll-behavior:auto; }
+  body { background:var(--bg); color:var(--fg); font-family:"Noto Sans TC",system-ui,sans-serif; line-height:1.7; overflow-x:hidden; }
+  #particles { position:fixed; inset:0; z-index:0; }
+  main, nav { position:relative; z-index:1; }
+  nav { position:fixed; top:0; left:0; right:0; display:flex; justify-content:space-between; align-items:center; padding:16px 24px; z-index:10; backdrop-filter:blur(8px); background:rgba(11,13,23,.5); }
+  nav b { letter-spacing:.1em; }
+  nav a.cta { background:var(--accent); color:#fff; padding:8px 18px; border-radius:99px; text-decoration:none; font-weight:700; }
+  section { min-height:100vh; padding:96px 24px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; }
+  .wrap { max-width:960px; width:100%; }
+  h1 { font-size:clamp(2.6rem,9vw,6rem); line-height:1.1; }
+  h1 .line { display:block; overflow:hidden; }
+  h1 .line span { display:inline-block; }
+  .sub { color:var(--muted); margin-top:16px; font-size:1.1rem; }
+  #typed { color:var(--accent); min-height:1.7em; }
+  .countdown { display:flex; gap:16px; justify-content:center; margin-top:32px; flex-wrap:wrap; }
+  .countdown div { background:var(--card); border-radius:16px; padding:16px 22px; min-width:86px; }
+  .countdown strong { display:block; font-size:2rem; font-variant-numeric:tabular-nums; }
+  .countdown small { color:var(--muted); }
+  h2 { font-size:clamp(1.8rem,5vw,3rem); margin-bottom:32px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:20px; }
+  .card { background:var(--card); border-radius:20px; padding:28px 22px; text-align:left; border:1px solid rgba(255,255,255,.06); }
+  .card h3 { color:var(--accent); margin-bottom:6px; }
+  .card p { color:var(--muted); font-size:.95rem; }
+  .timeline { text-align:left; border-left:2px solid var(--accent); padding-left:24px; display:grid; gap:24px; }
+  .timeline time { color:var(--accent); font-weight:700; }
+  .btn { display:inline-block; margin-top:28px; background:var(--accent); color:#fff; padding:14px 36px; border-radius:99px; text-decoration:none; font-weight:700; font-size:1.1rem; }
+  footer { position:relative; z-index:1; text-align:center; color:var(--muted); padding:32px; font-size:.85rem; }
+  @media (prefers-reduced-motion:reduce){ #particles{display:none} }
+</style>
+</head>
+<body>
+<div id="particles"></div>
+<nav><b>創新之夜 2026</b><a class="cta" href="#signup">立即報名</a></nav>
+
+<main>
+  <section id="hero">
+    <div class="wrap">
+      <h1><span class="line"><span>創新之夜</span></span><span class="line"><span>Innovation Night</span></span></h1>
+      <p class="sub">2026 年 12 月 20 日（六）18:00 ・ 範例會場 · 苗栗</p>
+      <p class="sub" id="typed"></p>
+      <div class="countdown" id="countdown">
+        <div><strong data-u="d">--</strong><small>天</small></div>
+        <div><strong data-u="h">--</strong><small>時</small></div>
+        <div><strong data-u="m">--</strong><small>分</small></div>
+        <div><strong data-u="s">--</strong><small>秒</small></div>
+      </div>
+      <a class="btn" href="#signup">我要參加</a>
+    </div>
+  </section>
+
+  <section id="about">
+    <div class="wrap">
+      <h2 class="reveal">活動亮點</h2>
+      <div class="grid">
+        <div class="card reveal"><h3>主題演講</h3><p>邀請業界講者分享創新實戰經驗。</p></div>
+        <div class="card reveal"><h3>創新競賽</h3><p>各組上台提案，現場評審與票選。</p></div>
+        <div class="card reveal"><h3>交流晚宴</h3><p>與社友、夥伴面對面，拓展人脈。</p></div>
+        <div class="card reveal"><h3>互動抽獎</h3><p>全程參與，豐富獎品等你帶回家。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="schedule">
+    <div class="wrap">
+      <h2 class="reveal">活動流程</h2>
+      <div class="timeline">
+        <div class="reveal"><time>18:00</time><p>報到入席</p></div>
+        <div class="reveal"><time>18:30</time><p>開幕致詞</p></div>
+        <div class="reveal"><time>19:00</time><p>主題演講</p></div>
+        <div class="reveal"><time>20:00</time><p>創新競賽提案</p></div>
+        <div class="reveal"><time>21:00</time><p>頒獎與抽獎</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="signup">
+    <div class="wrap">
+      <h2 class="reveal">一起來參加</h2>
+      <p class="sub reveal">名額有限，請於 12 月 10 日前完成報名。</p>
+      <a class="btn reveal" href="#">前往報名表單（請替換連結）</a>
+    </div>
+  </section>
+</main>
+<footer>範例頁面 · 內容皆為佔位文字，請自行替換</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tsparticles-slim@2.12.0/tsparticles.slim.bundle.min.js"></script>
+<script>
+(function () {
+  var reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // 粒子背景（tsParticles）
+  if (window.tsParticles && !reduce) {
+    tsParticles.load("particles", {
+      fpsLimit: 60,
+      particles: {
+        number: { value: 60 },
+        color: { value: ["#ff6b4a", "#f4f1ea"] },
+        opacity: { value: { min: .15, max: .5 } },
+        size: { value: { min: 1, max: 3 } },
+        move: { enable: true, speed: .6 },
+        links: { enable: true, distance: 140, color: "#ff6b4a", opacity: .12 }
+      },
+      interactivity: { events: { onHover: { enable: true, mode: "grab" } }, modes: { grab: { distance: 140 } } }
+    });
+  }
+
+  // 平滑捲動（Lenis）+ 與 GSAP 同步
+  var lenis;
+  if (window.Lenis && !reduce) {
+    lenis = new Lenis();
+    if (window.gsap) {
+      gsap.registerPlugin(ScrollTrigger);
+      lenis.on("scroll", ScrollTrigger.update);
+      gsap.ticker.add(function (t) { lenis.raf(t * 1000); });
+      gsap.ticker.lagSmoothing(0);
+    }
+  }
+  document.querySelectorAll('a[href^="#"]').forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      var id = a.getAttribute("href");
+      if (id.length > 1 && lenis) { e.preventDefault(); lenis.scrollTo(id); }
+    });
+  });
+
+  // 標題進場 + 捲動顯現（GSAP）
+  if (window.gsap && !reduce) {
+    gsap.registerPlugin(ScrollTrigger);
+    gsap.from("h1 .line span", { yPercent: 110, duration: 1, stagger: .15, ease: "power4.out" });
+    gsap.utils.toArray(".reveal").forEach(function (el) {
+      gsap.from(el, { opacity: 0, y: 40, duration: .8, ease: "power3.out",
+        scrollTrigger: { trigger: el, start: "top 88%" } });
+    });
+  }
+
+  // 打字機效果（自製，無依賴）
+  var phrases = ["靈感碰撞，創意成真", "與夥伴一起點亮今晚", "名額有限，立即報名"];
+  var el = document.getElementById("typed"), pi = 0, ci = 0, del = false;
+  (function tick() {
+    var p = phrases[pi];
+    el.textContent = p.slice(0, ci);
+    if (!del && ci === p.length) { del = true; return setTimeout(tick, 1400); }
+    if (del && ci === 0) { del = false; pi = (pi + 1) % phrases.length; }
+    ci += del ? -1 : 1;
+    setTimeout(tick, del ? 40 : 90);
+  })();
+
+  // 倒數計時
+  var target = new Date("2026-12-20T18:00:00+08:00").getTime();
+  function upd() {
+    var d = Math.max(0, target - Date.now()), s = Math.floor(d / 1000);
+    var v = { d: Math.floor(s / 86400), h: Math.floor(s % 86400 / 3600), m: Math.floor(s % 3600 / 60), s: s % 60 };
+    document.querySelectorAll("[data-u]").forEach(function (n) { n.textContent = String(v[n.dataset.u]).padStart(2, "0"); });
+  }
+  upd(); setInterval(upd, 1000);
+})();
+</script>
+</body>
+</html>
